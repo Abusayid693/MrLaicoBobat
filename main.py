@@ -49,7 +49,7 @@ emoji = {
 
 # ================SPELLING CHECK=======================
 def check_spelling(message):
-  message_splited = message.split()
+  message_splited = message.lower().split()
   blob = TextBlob(message)          #pass message to check spelling
   ans=blob.correct()
   ans_splited=ans.split()           
