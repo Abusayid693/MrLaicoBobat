@@ -47,10 +47,13 @@ emoji = {
   }
 
 
+Sad=["i am sad"]
+Bored=["i am Bored"]
+
 # ================SPELLING CHECK=======================
 def check_spelling(message):
   message_splited = message.lower().split()
-  blob = TextBlob(message)          #pass message to check spelling
+  blob = TextBlob(message.lower())          #pass message to check spelling
   ans=blob.correct()
   ans_splited=ans.split()           
  #  Loop through the messages to find if there was spelling mistake
@@ -89,7 +92,7 @@ async def on_ready():
   print("We have logged in as {0.user}".format(client))
 
 
-spell_check=1
+to_spell_check=1
 Sentiment_check=1
 
 
@@ -101,66 +104,39 @@ async def on_message(message):
   # Making sure bot does not respond itself
   if message.author==client.user:
    return
+  # getting corrections
+  corrections=check_spelling(message.content)
 
-  corrections=check_spelling(message.content) if not "laico" in text else []
-
-  if spell_check  and len(corrections):
-    for text in corrections:
-      await message.channel.send(text)
-
-  
-
-  elif "laico" in text:
+  if "laico" in text:
     response_message=random.choice(words_response)
     user_name=message.author.name
     # replacing "$" with author name
     response_message=response_message.replace("$", user_name)
-
     await message.channel.send(response_message)
-    
+  
+  # correction execution
+  elif to_spell_check and len(corrections):
+    await auto_response(message,len(corrections),corrections,1,0,0)  
 
-  else  :
-
-
-   
-    
+  else  :       
     text=message.content
     #Getting message sentiment
-    result=check_sentiment(text) 
-    print(message.author.name) 
-   
-    #If sad replying back 
-    if result=="Sad":
-      await message.channel.send("u seem "+result+" today")
-    
-    #If bored replying back
-    if result=="Bored":
-      await message.channel.send("u seem "+result)
-
-    #If happy reacting
-    if result=="Happy":
-      await message.add_reaction(emoji.get("milk"))
-
-    # If excited reacting
-    if result=="Excited":
-      await message.add_reaction(emoji.get("milk"))
-    
-    # If fear reacting
-    if result=="Fear":
-      await message.add_reaction(emoji.get("milk"))
+    result=check_sentiment(text)            
+    await auto_response(message,result=="Sad",Sad,1,0,0)    
+    await auto_response(message,result=="Bored",Bored,1,0,0)    
+    await auto_response(message,result=="Happy",0,0,1,emoji.get("milk"))   
+    await auto_response(message,result=="Excited",0,0,1,emoji.get("milk"))
+    await auto_response(message,result=="Fear",0,0,1,emoji.get("milk"))  
     to_append=0
 
 
-
-
-
-
-
-
-
-
-
-
+async def auto_response(message,condition,context_send,send,react,context_react):
+  if condition and send:
+    for i in context_send:
+      await message.channel.send(i)
+  if condition and react:
+    for i in context_react:
+      await message.add_reaction(i)
 
 keep_alive()
 client.run(os.environ['TOKEN'])
